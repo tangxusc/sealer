@@ -29,19 +29,19 @@ kind: InitConfiguration
 localAPIEndpoint:
   bindPort: 6443
 nodeRegistration:
-  criSocket: /var/run/dockershim.sock
+  criSocket: /run/containerd/containerd.sock
 
 ---
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
-kubernetesVersion: v1.19.8
+kubernetesVersion: v1.27.1
 imageRepository: sea.hub:5000
 networking:
   podSubnet: 100.64.0.0/10
   serviceSubnet: 10.96.0.0/22
 apiServer:
   extraArgs:
-    feature-gates: TTLAfterFinished=true,EphemeralContainers=true
+    feature-gates: ""
     audit-policy-file: "/etc/kubernetes/audit-policy.yml"
     audit-log-path: "/var/log/kubernetes/audit.log"
     audit-log-format: json
@@ -65,8 +65,8 @@ apiServer:
       pathType: File
 controllerManager:
   extraArgs:
-    feature-gates: TTLAfterFinished=true,EphemeralContainers=true
-    experimental-cluster-signing-duration: 876000h
+    feature-gates: ""
+    cluster-signing-duration: 876000h
   extraVolumes:
     - hostPath: /etc/localtime
       mountPath: /etc/localtime
@@ -75,7 +75,7 @@ controllerManager:
       pathType: File
 scheduler:
   extraArgs:
-    feature-gates: TTLAfterFinished=true,EphemeralContainers=true
+    feature-gates: ""
   extraVolumes:
     - hostPath: /etc/localtime
       mountPath: /etc/localtime
@@ -172,7 +172,7 @@ caCertPath: /etc/kubernetes/pki/ca.crt
 discovery:
   timeout: 5m0s
 nodeRegistration:
-  criSocket: /var/run/dockershim.sock
+  criSocket: /run/containerd/containerd.sock
 controlPlane:
   localAPIEndpoint:
     bindPort: 6443`
