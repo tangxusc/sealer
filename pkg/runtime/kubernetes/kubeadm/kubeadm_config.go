@@ -199,11 +199,11 @@ func NewKubeadmConfig(fromClusterFile KubeadmConfig, fromFile string, masters []
 		return conf, err
 	}
 
-	if err := conf.Merge(DefaultKubeadmConfig, utils.DecodeCRDFromString); err != nil {
-		return conf, err
-	}
-
-	conf.setKubeadmAPIVersion()
+	//if err := conf.Merge(DefaultKubeadmConfig, utils.DecodeCRDFromString); err != nil {
+	//	return conf, err
+	//}
+	//
+	//conf.setKubeadmAPIVersion()
 
 	if conf.ClusterConfiguration.Networking.DNSDomain == "" {
 		conf.ClusterConfiguration.Networking.DNSDomain = "cluster.local"
