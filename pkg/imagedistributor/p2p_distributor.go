@@ -478,8 +478,11 @@ func createTarGz(sourceDir, filename string) error {
 		if err != nil {
 			return err
 		}
-
-		logrus.Errorf("=============%s:%s,%s", filePath, info.Name(), info.Mode().String())
+		logrus.Debugf("tar file: %s, mode: %s", filePath, info.Mode().String())
+		if symlink {
+			logrus.Warnf("tar file is symlink: %s,skip", filePath)
+			return nil
+		}
 
 		if !info.IsDir() && !symlink {
 			file, err := os.Open(filepath.Clean(filePath))
