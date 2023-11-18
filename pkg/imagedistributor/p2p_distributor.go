@@ -160,15 +160,11 @@ func (p *p2pDistributor) distributeImpl(deployHosts []net.IP, dir string, dest s
 		eg.Go(func() error {
 			logrus.Infof("%s start", host)
 
-			localIP, err := p.getRealIP(host)
-			if err != nil {
-				return fmt.Errorf("failed to distribute to host %s: %s", host, err)
-			}
-
 			localID := p.ipfsAPI.Identity.String()
-			localHost := fmt.Sprintf("/ip4/%s/tcp/40011/p2p/%s", localIP, localID)
+			localHost := fmt.Sprintf("/ip4/%s/tcp/40011/p2p/%s", host.String(), localID)
 
 			command := fmt.Sprintf("/usr/bin/dist-receiver -bootstrap %s -cid %s -filename %s -target %s", localHost, cidString, name, dest)
+			logrus.Debugf("exec command %s on host %s", command, host)
 			if _, err = p.sshInfraDriver.Cmd(host, nil, command); err != nil {
 				return fmt.Errorf("failed to distribute to host %s: %s", host, err)
 			}
@@ -218,18 +214,6 @@ func (p *p2pDistributor) distributeImpl(deployHosts []net.IP, dir string, dest s
 	}
 
 	return nil
-}
-
-func (p *p2pDistributor) getRealIP(host net.IP) (string, error) {
-	localIPBytes, err := p.sshInfraDriver.Cmd(host, nil, "echo $SSH_CLIENT | awk '{print $1}'")
-	if err != nil {
-		return "", fmt.Errorf("failed to distribute to host %s: %s", host, err)
-	}
-
-	localIP := string(localIPBytes[:])
-	localIP = strings.TrimSpace(localIP)
-
-	return localIP, nil
 }
 
 func cidToString(cid path.Resolved) string {
@@ -490,8 +474,14 @@ func createTarGz(sourceDir, filename string) error {
 		if err := tarWriter.WriteHeader(header); err != nil {
 			return err
 		}
+		symlink, err := isSymlink(filePath)
+		if err != nil {
+			return err
+		}
 
-		if !info.IsDir() {
+		logrus.Errorf("=============%s:%s,%s", filePath, info.Name(), info.Mode().String())
+
+		if !info.IsDir() && !symlink {
 			file, err := os.Open(filepath.Clean(filePath))
 			if err != nil {
 				return err
@@ -505,4 +495,12 @@ func createTarGz(sourceDir, filename string) error {
 
 		return nil
 	})
+}
+
+func isSymlink(path string) (bool, error) {
+	fileInfo, err := os.Lstat(path)
+	if err != nil {
+		return false, err
+	}
+	return fileInfo.Mode()&os.ModeSymlink != 0, nil
 }

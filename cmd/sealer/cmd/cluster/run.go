@@ -16,6 +16,7 @@ package cluster
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 
@@ -111,14 +112,19 @@ func NewRunCmd() *cobra.Command {
 }
 
 func runWithClusterfile(clusterFile string, runFlags *types.RunFlags) error {
+	var distribution types.DistributionMethod
 	var p2p bool
 	switch runFlags.Distributor {
 	case "sftp":
+		distribution = types.SFTPDistribution
 		p2p = false
 	case "p2p":
+		distribution = types.P2PDistribution
 		p2p = true
 	default:
-		return fmt.Errorf("invalid distributor %s", runFlags.Distributor)
+		logrus.Warnf("invalid distributor %s, default to sftp", runFlags.Distributor)
+		distribution = types.SFTPDistribution
+		p2p = false
 	}
 
 	clusterFileData, err := os.ReadFile(filepath.Clean(clusterFile))
@@ -182,7 +188,7 @@ func runWithClusterfile(clusterFile string, runFlags *types.RunFlags) error {
 			Envs:         runFlags.CustomEnv,
 			RunMode:      runFlags.Mode,
 			IgnoreCache:  runFlags.IgnoreCache,
-			Distribution: types.P2PDistribution,
+			Distribution: distribution,
 		})
 	}
 
@@ -199,14 +205,19 @@ func runWithClusterfile(clusterFile string, runFlags *types.RunFlags) error {
 }
 
 func runWithArgs(imageName string, runFlags *types.RunFlags) error {
+	var distribution types.DistributionMethod
 	var p2p bool
 	switch runFlags.Distributor {
 	case "sftp":
+		distribution = types.SFTPDistribution
 		p2p = false
 	case "p2p":
+		distribution = types.P2PDistribution
 		p2p = true
 	default:
-		return fmt.Errorf("invalid distributor %s", runFlags.Distributor)
+		logrus.Warnf("invalid distributor %s, default to sftp", runFlags.Distributor)
+		distribution = types.SFTPDistribution
+		p2p = false
 	}
 
 	imageEngine, err := imageengine.NewImageEngine(options.EngineGlobalConfigurations{})
@@ -241,7 +252,7 @@ func runWithArgs(imageName string, runFlags *types.RunFlags) error {
 			Envs:         runFlags.CustomEnv,
 			RunMode:      runFlags.Mode,
 			IgnoreCache:  runFlags.IgnoreCache,
-			Distribution: types.P2PDistribution,
+			Distribution: distribution,
 		})
 	}
 
