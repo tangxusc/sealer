@@ -460,6 +460,10 @@ func createTarGz(sourceDir, filename string) error {
 	tarWriter := tar.NewWriter(gzWriter)
 	defer tarWriter.Close()
 
+	return writeFiles(sourceDir, tarWriter)
+}
+
+func writeFiles(sourceDir string, tarWriter *tar.Writer) error {
 	return filepath.Walk(sourceDir, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -480,11 +484,15 @@ func createTarGz(sourceDir, filename string) error {
 		}
 		logrus.Debugf("tar file: %s, mode: %s", filePath, info.Mode().String())
 		if symlink {
-			logrus.Warnf("tar file is symlink: %s,skip", filePath)
-			return nil
-		}
-
-		if !info.IsDir() && !symlink {
+			// 处理软链接
+			link, err := os.Readlink(filePath)
+			if err != nil {
+				return err
+			}
+			if err := writeFiles(link, tarWriter); err != nil {
+				return err
+			}
+		} else if !info.IsDir() {
 			file, err := os.Open(filepath.Clean(filePath))
 			if err != nil {
 				return err
