@@ -13,7 +13,7 @@ permissions:
 jobs:
   note:
     name: Pre note
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       stringver: ${{ steps.contentrel.outputs.stringver }}
@@ -57,7 +57,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-24.04 ]
 
     steps:
       - name: Set up Go 1.17
@@ -102,7 +102,7 @@ jobs:
 
   release:
     name: Create sealer Release
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     needs: [ build, note ]
 
